@@ -1,0 +1,53 @@
+<?php
+class WalrusBot{
+   var $socket;
+   function __construct($_CONFIG){
+      $this->socket=fsockopen($_CONFIG['server']['address'], $_CONFIG['server']['port']);
+      $this->login($_CONFIG);
+      unset($_CONFIG);
+   }
+
+   function login($_CONFIG){
+      $this->send_data('PASS', $_CONFIG['bot']['password']);
+      $this->send_data('NICK', $_CONFIG['bot']['nick']);
+      $this->send_data('USER', $_CONFIG['bot']['user']." ".$_CONFIG['bot']['mode']." * :".$_CONFIG['bot']['name']);
+      unset($_CONFIG);
+   }
+
+   function send_data($command, $data=''){
+      $irc_tx=trim(str_replace(array(chr(10), chr(13)), '', $command." ".$data), " ")."\r\n";
+      fputs($this->socket, $irc_tx);
+      if($command!='PONG'){
+         echo "->".$irc_tx;
+      }
+      unset($irc_tx, $command, $data);
+   }
+
+   function get_data(){
+      $data=fgets($this->socket, 256);
+      if($data){
+         if(substr($data, 0, 4)!='PING'){
+            echo "<-".$data;
+         }
+      }
+      return($data);
+      unset($data);
+   }
+
+   function query_channels(){
+      $this->send_data('LIST');
+   }
+
+   function join_channel($channel){
+      if(is_array($channel)){
+         foreach($channel as $channel_data){
+            $this->send_data('JOIN', $channel_data);
+         }
+         unset($channel_data);
+      } else{
+         $this->send_data('JOIN', $channel);
+      }
+      unset($channel);
+   }
+}
+?>
