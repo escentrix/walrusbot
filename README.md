@@ -1,0 +1,2 @@
+# walrusbot
+IRC bot
